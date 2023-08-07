@@ -11,8 +11,8 @@ type QueueBucketKeyFunc func(bucketIdx int) string
 type BucketConsumer struct {
 	rds            *redis.Client
 	bucketCount    int
-	interval       int // 消费时间间隔
-	bucketParallel int // 每个 bucket 消费的并行度
+	interval       int // consume interval seconds per consumer/bucket
+	bucketParallel int // consume goroutine count per consumer/bucket
 	keyFunc        QueueBucketKeyFunc
 }
 
@@ -39,7 +39,7 @@ func NewBucketConsumer(rds *redis.Client, bucketCount int, interval int, bucketP
 	return &BucketConsumer{rds: rds, bucketCount: bucketCount, interval: interval, bucketParallel: bucketParallel, keyFunc: keyFunc}
 }
 
-// StartConsume 外部传进来的应该是一个 cancelCtx
+// StartConsume Externally, ctx should be assigned a value such as context.WithCancel
 func (b *BucketConsumer) StartConsume(ctx context.Context, fn ConsumeFunc) {
 	wg := sync.WaitGroup{}
 	wg.Add(b.bucketCount)
