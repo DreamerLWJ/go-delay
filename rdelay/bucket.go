@@ -2,6 +2,7 @@ package rdelay
 
 import (
 	"context"
+	"github.com/DreamerLWJ/go-delay/api"
 	"github.com/redis/go-redis/v9"
 	"sync"
 )
@@ -40,7 +41,7 @@ func NewBucketConsumer(rds *redis.Client, bucketCount int, interval int, bucketP
 }
 
 // StartConsume Externally, ctx should be assigned a value such as context.WithCancel
-func (b *BucketConsumer) StartConsume(ctx context.Context, fn ConsumeFunc) {
+func (b *BucketConsumer) StartConsume(ctx context.Context, fn api.ConsumeFunc) {
 	wg := sync.WaitGroup{}
 	wg.Add(b.bucketCount)
 	for i := 0; i < b.bucketCount; i++ {

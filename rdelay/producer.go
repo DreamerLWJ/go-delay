@@ -2,12 +2,13 @@ package rdelay
 
 import (
 	"context"
+	"github.com/DreamerLWJ/go-delay/api"
 	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
 	"time"
 )
 
-type QueueMemberBucketFunc func(member QueueMember) int
+type QueueMemberBucketFunc func(member api.QueueItem) int
 
 type BucketProducer struct {
 	rds         *redis.Client
@@ -20,7 +21,7 @@ func NewBucketProducer(rds *redis.Client, bucketCount int, bucketFunc QueueBucke
 	return &BucketProducer{rds: rds, bucketCount: bucketCount, bucketFunc: bucketFunc, memberFunc: memberFunc}
 }
 
-func (b *BucketProducer) Send(ctx context.Context, member QueueMember) error {
+func (b *BucketProducer) Send(ctx context.Context, member api.QueueItem) error {
 	bucketIdx := b.memberFunc(member)
 	bucketKey := b.bucketFunc(bucketIdx)
 	// TODO pool opt
@@ -34,8 +35,8 @@ func (b *BucketProducer) Send(ctx context.Context, member QueueMember) error {
 
 func (b *BucketProducer) SendDelay(ctx context.Context, member string, duration time.Duration) error {
 	delayTime := time.Now().Add(duration).Unix()
-	return b.Send(ctx, QueueMember{
-		Member:    member,
+	return b.Send(ctx, api.QueueItem{
+		TaskKey:   member,
 		DelayTime: delayTime,
 	})
 }

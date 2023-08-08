@@ -2,6 +2,7 @@ package rdelay
 
 import (
 	"context"
+	"github.com/DreamerLWJ/go-delay/api"
 	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
 	"strconv"
@@ -23,11 +24,6 @@ return elementsWithScores
 `
 )
 
-type QueueMember struct {
-	Member    string
-	DelayTime int64 // 生效时间
-}
-
 type Queue struct {
 	rds *redis.Client
 	key string
@@ -37,10 +33,10 @@ func NewQueue(rds *redis.Client, key string) *Queue {
 	return &Queue{rds: rds, key: key}
 }
 
-func (q *Queue) Push(ctx context.Context, member QueueMember) error {
+func (q *Queue) Push(ctx context.Context, member api.QueueItem) error {
 	err := q.rds.ZAdd(ctx, q.key, redis.Z{
 		Score:  float64(member.DelayTime),
-		Member: member.Member,
+		Member: member.TaskKey,
 	}).Err()
 	if err != nil {
 		return errors.Errorf("Push|rds.ZAdd err:%s", err)
@@ -48,7 +44,7 @@ func (q *Queue) Push(ctx context.Context, member QueueMember) error {
 	return nil
 }
 
-func (q *Queue) Poll(ctx context.Context, nowUnix int64, pollSize int) (members []QueueMember, err error) {
+func (q *Queue) Poll(ctx context.Context, nowUnix int64, pollSize int) (members []api.QueueItem, err error) {
 	logHead := "Poll|"
 	result, err := q.rds.Eval(ctx, _pollExpireMemberScript, []string{q.key}, nowUnix, pollSize).StringSlice()
 	if err != nil {
@@ -63,8 +59,8 @@ func (q *Queue) Poll(ctx context.Context, nowUnix int64, pollSize int) (members 
 			// log
 			continue
 		}
-		members = append(members, QueueMember{
-			Member:    result[i-1],
+		members = append(members, api.QueueItem{
+			TaskKey:   result[i-1],
 			DelayTime: sendTime,
 		})
 	}

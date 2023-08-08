@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/segmentio/kafka-go"
+	"time"
 )
 
 func main() {
@@ -13,8 +15,7 @@ func main() {
 	ctx := context.Background()
 
 	writer := kafka.Writer{
-		Addr:  kafka.TCP(broker),
-		Topic: topic,
+		Addr: kafka.TCP(broker),
 	}
 	defer func() {
 		err := writer.Close()
@@ -23,12 +24,15 @@ func main() {
 		}
 	}()
 
-	err := writer.WriteMessages(ctx,
-		kafka.Message{Value: []byte("one!")},
-		kafka.Message{Value: []byte("two!")},
-		kafka.Message{Value: []byte("three!")},
-	)
-	if err != nil {
-		panic(err)
+	for i := 0; i < 1; i++ {
+		time.Sleep(time.Second)
+		err := writer.WriteMessages(ctx, kafka.Message{
+			Topic: topic,
+			Value: []byte(fmt.Sprintf("test-msg: %d", i)),
+		})
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("send success")
 	}
 }

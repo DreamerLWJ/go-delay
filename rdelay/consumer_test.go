@@ -3,6 +3,7 @@ package rdelay
 import (
 	"context"
 	"fmt"
+	"github.com/DreamerLWJ/go-delay/api"
 	"github.com/redis/go-redis/v9"
 	"testing"
 	"time"
@@ -23,7 +24,7 @@ func TestNewConsumer(t *testing.T) {
 	consumer := NewConsumer(queue, 10, 1)
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	go func() {
-		consumer.Consume(ctx, func(member QueueMember) {
+		consumer.Consume(ctx, func(member api.QueueItem) {
 			fmt.Println(member)
 		})
 	}()

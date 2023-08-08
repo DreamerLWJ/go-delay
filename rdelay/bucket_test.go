@@ -3,6 +3,7 @@ package rdelay
 import (
 	"context"
 	"fmt"
+	"github.com/DreamerLWJ/go-delay/api"
 	"github.com/redis/go-redis/v9"
 	"strconv"
 	"testing"
@@ -27,8 +28,8 @@ func TestNewBucketConsumer(t *testing.T) {
 	bucketFunc := func(bucketIdx int) string {
 		return fmt.Sprintf("test_bucket_%d", bucketIdx)
 	}
-	memberFunc := func(member QueueMember) int {
-		uid, err := strconv.Atoi(member.Member)
+	memberFunc := func(member api.QueueItem) int {
+		uid, err := strconv.Atoi(member.TaskKey)
 		if err != nil {
 			// log
 		}
@@ -39,7 +40,7 @@ func TestNewBucketConsumer(t *testing.T) {
 
 	cancel, cancelFunc := context.WithCancel(ctx)
 	defer cancelFunc()
-	bucketConsumer.StartConsume(cancel, func(member QueueMember) {
+	bucketConsumer.StartConsume(cancel, func(member api.QueueItem) {
 		fmt.Println(member)
 	})
 
