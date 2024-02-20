@@ -3,11 +3,12 @@ package rdelay
 import (
 	"context"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/DreamerLWJ/go-delay/api"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 )
 
 func TestNewQueue(t *testing.T) {
@@ -23,33 +24,35 @@ func TestNewQueue(t *testing.T) {
 		}
 	}()
 
-	queue := NewQueue(client, "test_queue")
+	redisClient := newTestGoRedisClient(client)
 
-	err := queue.Push(ctx, api.QueueItem{
+	queue := NewQueue(redisClient, "test_queue")
+
+	err := queue.Push(ctx, api.DelayQueueItem{
 		TaskKey:   "123",
 		DelayTime: 1,
 	})
 	assert.Nil(t, err)
 
-	err = queue.Push(ctx, api.QueueItem{
+	err = queue.Push(ctx, api.DelayQueueItem{
 		TaskKey:   "456",
 		DelayTime: 2,
 	})
 	assert.Nil(t, err)
 
-	err = queue.Push(ctx, api.QueueItem{
+	err = queue.Push(ctx, api.DelayQueueItem{
 		TaskKey:   "789",
 		DelayTime: 3,
 	})
 	assert.Nil(t, err)
 
-	err = queue.Push(ctx, api.QueueItem{
+	err = queue.Push(ctx, api.DelayQueueItem{
 		TaskKey:   "1234",
 		DelayTime: time.Now().Unix(),
 	})
 	assert.Nil(t, err)
 
-	err = queue.Push(ctx, api.QueueItem{
+	err = queue.Push(ctx, api.DelayQueueItem{
 		TaskKey:   "5678",
 		DelayTime: time.Now().Unix(),
 	})

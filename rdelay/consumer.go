@@ -3,8 +3,9 @@ package rdelay
 import (
 	"context"
 	"fmt"
-	"github.com/DreamerLWJ/go-delay/api"
 	"time"
+
+	"github.com/DreamerLWJ/go-delay/api"
 )
 
 type Consumer struct {
@@ -28,7 +29,7 @@ func NewConsumer(q *Queue, interval int, parallel int) *Consumer {
 
 // Consume Externally, ctx should be assigned a value such as context.WithCancel
 func (c *Consumer) Consume(ctx context.Context, fn api.ConsumeFunc) {
-	msgChan := make(chan api.QueueItem, c.parallel)
+	msgChan := make(chan api.DelayQueueItem, c.parallel)
 	c.initWorker(c.parallel*10, msgChan, fn)
 	for {
 		select {
@@ -49,7 +50,7 @@ func (c *Consumer) Consume(ctx context.Context, fn api.ConsumeFunc) {
 }
 
 // init parallel consume goroutine
-func (c *Consumer) initWorker(num int, msgChan chan api.QueueItem, fn api.ConsumeFunc) {
+func (c *Consumer) initWorker(num int, msgChan chan api.DelayQueueItem, fn api.ConsumeFunc) {
 	for i := 0; i < num; i++ {
 		go func() {
 			msg, notClose := <-msgChan

@@ -2,29 +2,22 @@ package rdelay
 
 import (
 	"context"
-	"github.com/DreamerLWJ/go-delay/api"
-	"github.com/redis/go-redis/v9"
 	"sync"
+
+	"github.com/DreamerLWJ/go-delay/api"
 )
 
 type QueueBucketKeyFunc func(bucketIdx int) string
 
 type BucketConsumer struct {
-	rds            *redis.Client
+	rds            api.RedisClient
 	bucketCount    int
 	interval       int // consume interval seconds per consumer/bucket
 	bucketParallel int // consume goroutine count per consumer/bucket
 	keyFunc        QueueBucketKeyFunc
 }
 
-func NewBucketConsumer(rds *redis.Client, bucketCount int, interval int, bucketParallel int, keyFunc QueueBucketKeyFunc) *BucketConsumer {
-	if rds != nil {
-		if err := rds.Ping(context.Background()).Err(); err != nil {
-			panic("redis not avail")
-		}
-	} else {
-		panic("redis not allow nil")
-	}
+func NewBucketConsumer(rds api.RedisClient, bucketCount int, interval int, bucketParallel int, keyFunc QueueBucketKeyFunc) *BucketConsumer {
 	if interval == 0 {
 		panic("interval not allow 0")
 	}

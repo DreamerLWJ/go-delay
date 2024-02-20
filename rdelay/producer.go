@@ -2,29 +2,28 @@ package rdelay
 
 import (
 	"context"
+	"time"
+
 	"github.com/DreamerLWJ/go-delay/api"
 	"github.com/pkg/errors"
-	"github.com/redis/go-redis/v9"
-	"time"
 )
 
-type QueueMemberBucketFunc func(member api.QueueItem) int
+type QueueMemberBucketFunc func(member api.DelayQueueItem) int
 
 type BucketProducer struct {
-	rds         *redis.Client
+	rds         api.RedisClient
 	bucketCount int
 	bucketFunc  QueueBucketKeyFunc
 	memberFunc  QueueMemberBucketFunc
 }
 
-func NewBucketProducer(rds *redis.Client, bucketCount int, bucketFunc QueueBucketKeyFunc, memberFunc QueueMemberBucketFunc) *BucketProducer {
+func NewBucketProducer(rds api.RedisClient, bucketCount int, bucketFunc QueueBucketKeyFunc, memberFunc QueueMemberBucketFunc) *BucketProducer {
 	return &BucketProducer{rds: rds, bucketCount: bucketCount, bucketFunc: bucketFunc, memberFunc: memberFunc}
 }
 
-func (b *BucketProducer) Send(ctx context.Context, member api.QueueItem) error {
+func (b *BucketProducer) Send(ctx context.Context, member api.DelayQueueItem) error {
 	bucketIdx := b.memberFunc(member)
 	bucketKey := b.bucketFunc(bucketIdx)
-	// TODO pool opt
 	queue := NewQueue(b.rds, bucketKey)
 	err := queue.Push(ctx, member)
 	if err != nil {
@@ -35,7 +34,7 @@ func (b *BucketProducer) Send(ctx context.Context, member api.QueueItem) error {
 
 func (b *BucketProducer) SendDelay(ctx context.Context, member string, duration time.Duration) error {
 	delayTime := time.Now().Add(duration).Unix()
-	return b.Send(ctx, api.QueueItem{
+	return b.Send(ctx, api.DelayQueueItem{
 		TaskKey:   member,
 		DelayTime: delayTime,
 	})

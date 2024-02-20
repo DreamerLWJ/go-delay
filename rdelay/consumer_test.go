@@ -3,10 +3,11 @@ package rdelay
 import (
 	"context"
 	"fmt"
-	"github.com/DreamerLWJ/go-delay/api"
-	"github.com/redis/go-redis/v9"
 	"testing"
 	"time"
+
+	"github.com/DreamerLWJ/go-delay/api"
+	"github.com/redis/go-redis/v9"
 )
 
 func TestNewConsumer(t *testing.T) {
@@ -20,11 +21,13 @@ func TestNewConsumer(t *testing.T) {
 			panic(err)
 		}
 	}()
-	queue := NewQueue(client, "test_queue")
+	redisClient := newTestGoRedisClient(client)
+
+	queue := NewQueue(redisClient, "test_queue")
 	consumer := NewConsumer(queue, 10, 1)
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	go func() {
-		consumer.Consume(ctx, func(member api.QueueItem) {
+		consumer.Consume(ctx, func(member api.DelayQueueItem) {
 			fmt.Println(member)
 		})
 	}()
